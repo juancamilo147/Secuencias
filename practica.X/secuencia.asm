@@ -1,0 +1,87 @@
+#include "p16F887.inc"
+
+
+ __CONFIG _CONFIG1, _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOREN_OFF & _IESO_OFF & _FCMEN_OFF & _LVP_OFF
+
+ __CONFIG _CONFIG2, _BOR4V_BOR40V & _WRT_OFF
+
+    LIST p=16F887
+   
+N EQU 0x87
+cont1 EQU 0x20
+cont2 EQU 0x21
+cont3 EQU 0x22
+ 
+ 
+    ORG	0x00
+    GOTO INICIO
+    
+INICIO
+    BCF STATUS,RP0   ;RP0 = 0
+    BCF STATUS,RP1  ;RP1 = 0
+    CLRF PORTA	;PORTA = 0
+    CLRF PORTB ;PORT SECUENCIA LED
+    ;MOVLW B'0000000'  ;
+    ;MOVWF PORTA
+    BSF STATUS, RP0 ;RP0 = 1
+    CLRF TRISA
+    CLRF TRISD	;SECUENCIA SALIDA
+    BSF STATUS,RP1
+    CLRF ANSEL
+    BCF STATUS,RP0  ;BANK O RP1=0 RP0=0
+    BCF STATUS,RP1
+    movlw 0x61 ; secuencia de el relog interno 
+    movwf OSCCON
+    MOVLW 0x00
+    MOVWF cont3
+    
+    ;BSF PORTD,0
+    GOTO SECUENCIA2
+    
+ENC_LED
+    BSF PORTA,0	;RA0 = 1
+    CALL RETARDO
+    BCF PORTA,0
+    CALL RETARDO
+    GOTO ENC_LED
+    
+
+SECUENCIA2
+    CALL RETARDO
+    ;RLF PORTD,1
+    MOVF cont3,0
+    CALL SEC_LOOKUP
+    MOVWF PORTB
+    INCF cont3,1
+    GOTO SECUENCIA2
+    
+    
+RETARDO
+    MOVLW N
+    MOVWF cont1
+    
+REP_1
+    MOVLW N
+    MOVWF cont2
+    
+REP_2
+    DECFSZ cont2,1
+    GOTO REP_2
+    DECFSZ cont1,1
+    GOTO REP_1
+    RETURN
+
+SEC_LOOKUP 
+	ADDWF PCL,f
+	RETLW 01h ;0x40
+	RETLW 02h ;0x79
+	RETLW 04h 
+	RETLW 08h 
+	RETLW 10h 
+	RETLW 20h 
+	RETLW 40h
+	RETLW 80h 
+	RETURN
+    
+    
+    END
